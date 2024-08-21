@@ -1,0 +1,136 @@
+ $sql = "SELECT p.id, p.ime, p.prezime, p.slika, p.obrazovanje, p.opis, k.naziv AS kurs_naziv 
+        FROM predavaci p 
+        LEFT JOIN kursevi_predavaci kp ON p.id = kp.predavac_id 
+        LEFT JOIN kursevi k ON kp.kurs_id = k.id";
+
+<a href='izmena.php?id={$row['id']}' class='btn btn-primary'>Izmeni</a>
+
+_________________________________________________________
+<?php
+include 'php/config.php';
+
+if (isset($_GET['id'])) {
+    $predavac_id = $_GET['id'];
+
+   
+    $sql = "SELECT * FROM predavaci WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $predavac_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $predavac = $result->fetch_assoc();
+    } else {
+        echo "Nije pronađen predavač sa datim ID-om.";
+        exit();
+    }
+} else {
+    echo "Nije prosleđen ID predavača.";
+    exit();
+}
+
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $ime = $_POST['ime'];
+    $prezime = $_POST['prezime'];
+    $obrazovanje = $_POST['obrazovanje'];
+    $opis = $_POST['opis'];
+
+    $sql = "UPDATE predavaci SET ime = ?, prezime = ?, obrazovanje = ?, opis = ? WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssssi", $ime, $prezime, $obrazovanje, $opis, $predavac_id);
+
+    if ($stmt->execute()) {
+        header("Location: predavaci.php"); 
+        exit();
+    } else {
+        echo "Greška prilikom ažuriranja podataka: " . $stmt->error;
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Izmena Podataka o Predavaču</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/kursevi.css">
+</head>
+<body>
+
+<div class="header">
+    <div class="container">
+        <a class="navbar-brand" href="index.php">
+            <img src="img/logo.png" alt="Logo" class="logo" style="height: 70px;">
+        </a>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="predavaci.php">Predavaci</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Kursevi
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="inf_kursevi.php">Standardni kurs</a>
+                            <a class="dropdown-item" href="inf_kursevi.php">Mini grupa</a>
+                            <a class="dropdown-item" href="inf_kursevi.php">Individualna nastava</a>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">O nama</a>
+                    </li>
+                    <li class="nav-item">
+  <a class="nav-link" href="#" data-toggle="modal" data-target="#kontaktModal">Kontakt</a>
+</li>
+                    <?php if(isset($_SESSION['user_id'])): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="php\logout.php">Odjava</a>
+                        </li>
+                    <?php else: ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="login.php">Prijava</a>
+                        </li>
+                    <?php endif; ?>
+                </ul>
+            </div>
+        </nav>
+    </div>
+</div>
+
+<div class="container mt-5">
+    <h1>Izmena Podataka o Predavaču</h1>
+    <form method="post">
+        <div class="form-group">
+            <label for="ime">Ime</label>
+            <input type="text" class="form-control" id="ime" name="ime" value="<?php echo ($predavac['ime']); ?>" required>
+        </div>
+        <div class="form-group">
+            <label for="prezime">Prezime</label>
+            <input type="text" class="form-control" id="prezime" name="prezime" value="<?php echo ($predavac['prezime']); ?>" required>
+        </div>
+        <div class="form-group">
+            <label for="obrazovanje">Obrazovanje</label>
+            <input type="text" class="form-control" id="obrazovanje" name="obrazovanje" value="<?php echo ($predavac['obrazovanje']); ?>" required>
+        </div>
+        <div class="form-group">
+            <label for="opis">Opis</label>
+            <textarea class="form-control" id="opis" name="opis" required><?php echo ($predavac['opis']); ?></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Sačuvaj Promene</button>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
